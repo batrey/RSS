@@ -1,0 +1,46 @@
+{
+	"info": {
+		"_postman_id": "e5dd3352-ac02-4e4c-822d-d2d10ec6e691",
+		"name": "RSS reader",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "22822430"
+	},
+	"item": [
+		{
+			"name": "Get List of Articles",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "Get One Article",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/one?category=bbc&cursor=20",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"one"
+					],
+					"query": [
+						{
+							"key": "category",
+							"value": "bbc"
+						},
+						{
+							"key": "cursor",
+							"value": "20"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
