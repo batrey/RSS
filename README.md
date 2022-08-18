@@ -1,11 +1,16 @@
 RUN:
 
 cd RSS/app
+
 docker-compose up
+
 Make migrateup
+
 go run main.go 
 
+
 EndPoints
+
 RSS reader.postman_collection.json
 
 
