@@ -1,0 +1,3 @@
+DROP TABLE IF EXISTS user;
+DROP TABLE IF EXISTS registered;
+DROP TABLE IF EXISTS Idempotency;
