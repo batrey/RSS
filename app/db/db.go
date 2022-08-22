@@ -10,10 +10,6 @@ import (
 	_ "github.com/lib/pq"
 )
 
-// type DataBase struct {
-// 	Conn *sql.DB
-// }
-
 type ArticleRepo struct {
 	Conn *sql.DB
 }
@@ -27,14 +23,6 @@ func NewArticleRepo(db *sql.DB) *ArticleRepo {
 func (db *ArticleRepo) Close() error {
 	return db.Conn.Close()
 }
-
-// func NewDatabase() (*DataBase, error) {
-// 	db := ConnectDb()
-// 	if err != nil {
-// 		return db, err
-// 	}
-// 	return &DataBase{Conn: db.Conn}, err
-// }
 
 func ConnectDb() *sql.DB {
 	var err error
@@ -100,7 +88,6 @@ func (db *ArticleRepo) GetOneArticle(category string, id string) (article interf
 	}
 
 	return issue(tmp), nil
-	// return issue(tmp), nil
 }
 
 func issue(value []byte) interface{} {

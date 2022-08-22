@@ -137,27 +137,15 @@ func (db *BaseHandler) HandleTaskSendEmail() http.HandlerFunc {
 			return
 		}
 		tmpResp, err := json.Marshal(resp)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
 		err = Email(addr[0], reciver, sender[0], tmpResp)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
 		w.WriteHeader(http.StatusOK)
 	}
 }
-
-// func (s *models.Server) respnd(w http.ResponseWriter, r *http.Request, resp interface{}, status int) {
-// 	if data != nil {
-// 		err := json.NewEncoder(w).Encode(resp)
-// 		//TODO:
-// 	}
-
-// 	w.WriteHeader(status)
-// 	w.WriteHeader(http.StatusOK)
-// 	encoder := json.NewEncoder(w)
-// 	encoder.SetEscapeHTML(false)
-// 	if err := encoder.Encode(resp); err != nil {
-// 		w.WriteHeader(http.StatusInternalServerError)
-// 		w.Write([]byte(err.Error()))
-// 	}
-// }
-
-// func (s *Server) decode(w http.ResponseWriter, r *http.Request, v interface{}) error {
-// 	return json.NewDecoder(r.Body).Decode(v)
-// }
