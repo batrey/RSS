@@ -10,34 +10,51 @@ import (
 	_ "github.com/lib/pq"
 )
 
-type DataBase struct {
+// type DataBase struct {
+// 	Conn *sql.DB
+// }
+
+type ArticleRepo struct {
 	Conn *sql.DB
 }
 
-func (db *DataBase) Close() error {
+func NewArticleRepo(db *sql.DB) *ArticleRepo {
+	return &ArticleRepo{
+		Conn: db,
+	}
+}
+
+func (db *ArticleRepo) Close() error {
 	return db.Conn.Close()
 }
 
-func (db *DataBase) ConnectDb() (*DataBase, error) {
+// func NewDatabase() (*DataBase, error) {
+// 	db := ConnectDb()
+// 	if err != nil {
+// 		return db, err
+// 	}
+// 	return &DataBase{Conn: db.Conn}, err
+// }
+
+func ConnectDb() *sql.DB {
 	var err error
 	url := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", os.Getenv("POSTGRES_USER"), os.Getenv("POSTGRES_PASSWORD"), os.Getenv("POSTGRES_HOST"), os.Getenv("POSTGRES_PORT"), os.Getenv("POSTGRES_DB"))
-
-	db.Conn, err = sql.Open("postgres", url)
+	Conn, err := sql.Open("postgres", url)
 	if err != nil {
 		log.Fatalf("could not connect to postgres database: %v", err)
-		return db, err
+		return Conn
 	}
 
-	err = db.Conn.Ping()
+	err = Conn.Ping()
 	if err != nil {
-		return db, err
+		return Conn
 	}
 
 	fmt.Println(url)
-	return db, nil
+	return Conn
 }
 
-func (db *DataBase) AddArticles(category string, article interface{}) (err error) {
+func (db *ArticleRepo) AddArticles(category string, article interface{}) (err error) {
 	tmp, err := json.Marshal(article)
 	if err != nil {
 		return err
@@ -51,7 +68,7 @@ func (db *DataBase) AddArticles(category string, article interface{}) (err error
 
 }
 
-func (db *DataBase) PagnationArticles(category string, cursor string, limit string) (map[string]interface{}, error) {
+func (db *ArticleRepo) PagnationArticles(category string, cursor string, limit string) (map[string]interface{}, error) {
 	articles := make(map[string]interface{})
 	rows, err := db.Conn.Query("SELECT id,article FROM articles WHERE category = $1 and id > $2 ORDER BY id ASC LIMIT $3", category, cursor, limit)
 	if err != nil {
@@ -75,7 +92,7 @@ func (db *DataBase) PagnationArticles(category string, cursor string, limit stri
 	return articles, nil
 }
 
-func (db *DataBase) GetOneArticle(category string, id string) (article interface{}, err error) {
+func (db *ArticleRepo) GetOneArticle(category string, id string) (article interface{}, err error) {
 	var tmp []byte
 	err = db.Conn.QueryRow("SELECT article FROM articles WHERE category = $1 and id = $2", category, id).Scan(&tmp)
 	if err != nil {

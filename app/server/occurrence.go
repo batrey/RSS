@@ -2,13 +2,21 @@ package server
 
 import (
 	"os"
-	"rss/app/db"
 	"rss/app/handlers"
 	"rss/app/models"
 	"strings"
 )
 
-func TaskBbc(db db.DataBase) {
+type TaskBaseHandler struct {
+	TaskBaseHandler models.ArticlesRepo
+}
+
+func TaskNewBaseHandle(task models.ArticlesRepo) *TaskBaseHandler {
+	return &TaskBaseHandler{
+		TaskBaseHandler: task,
+	}
+}
+func (t *TaskBaseHandler) TaskBbc() {
 
 	urls := strings.Split(os.Getenv("BBC_URLS"), ",")
 	// Create a channel to process the feeds
@@ -28,11 +36,11 @@ func TaskBbc(db db.DataBase) {
 
 	//loop over each sites articles and add them to the database
 	for _, feed := range feeds {
-		db.AddArticles(feed.Channel.Title, feed)
+		t.TaskBaseHandler.AddArticles(feed.Channel.Title, feed)
 	}
 }
 
-func TaskSky(db db.DataBase) {
+func (t *TaskBaseHandler) TaskSky() {
 
 	urls := strings.Split(os.Getenv("SKY_URLS"), ",")
 	// Create a channel to process the feeds
@@ -52,6 +60,6 @@ func TaskSky(db db.DataBase) {
 
 	//loop over each sites articles and add them to the database
 	for _, feed := range feeds {
-		db.AddArticles(feed.Channel.Title, feed)
+		t.TaskBaseHandler.AddArticles(feed.Channel.Title, feed)
 	}
 }

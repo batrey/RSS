@@ -1,6 +1,22 @@
 package models
 
-import "encoding/xml"
+import (
+	"encoding/xml"
+)
+
+// type RssRepository interface {
+// 	AddArticles(category string, article interface{}) (err error)
+// 	PagnationArticles(category string, cursor string, limit string) (map[string]interface{}, error)
+// 	GetOneArticle(category string, id string) (article interface{}, err error)
+// }
+
+// type storage struct {
+// 	db RssRepository
+// }
+
+// func NewStorage(db storage) (*storage, error) {
+// 	return &storage{db}, nil
+// }
 
 type RssBbc struct {
 	XMLName xml.Name `xml:"rss"`

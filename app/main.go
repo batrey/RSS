@@ -2,12 +2,13 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
-	db "rss/app/db"
+	database "rss/app/db"
 	"rss/app/handlers"
 	"rss/app/server"
 	"syscall"
@@ -18,6 +19,11 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 	_ "github.com/lib/pq"
 )
+
+type Server struct {
+	Db     *sql.DB
+	Router *http.ServeMux
+}
 
 func middleWare(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -48,14 +54,15 @@ func main() {
 	pong, err := client.Ping().Result()
 	fmt.Println(pong, err)
 
+	db := database.ConnectDb()
+	articlesRepo := database.NewArticleRepo(db)
+	h := handlers.NewBaseHandler(articlesRepo)
+	t := server.TaskNewBaseHandle(articlesRepo)
+
 	//Connect to postgres
-	d := db.DataBase{}
-	database, err := d.ConnectDb()
-	if err != nil {
-		log.Fatalf("Could not set up database: %v", err)
-	}
+
 	//close db connection
-	defer database.Conn.Close()
+	defer articlesRepo.Close()
 
 	envTime := os.Getenv("PULL_TIME")
 	pullTime, err := time.ParseDuration(envTime)
@@ -67,7 +74,7 @@ func main() {
 			select {
 			case <-ticker.C:
 				fmt.Println("Getting sky Articles")
-				server.TaskSky(*database)
+				t.TaskSky()
 			case <-quit:
 				ticker.Stop()
 				return
@@ -79,7 +86,7 @@ func main() {
 			select {
 			case <-ticker.C:
 				fmt.Println("Getting BBC Articles ")
-				server.TaskBbc(*database)
+				t.TaskBbc()
 			case <-quit:
 				ticker.Stop()
 				return
@@ -93,12 +100,14 @@ func main() {
 		Handler: mux,
 	}
 
-	listHandle := http.HandlerFunc(handlers.GetList(*database))
-	oneHandle := http.HandlerFunc(handlers.GetArticle(*database))
-	mailHandler := http.HandlerFunc(handlers.ShareEmail(*database))
+	listHandle := http.HandlerFunc(h.HandleTaskGetList())
+	oneHandle := http.HandlerFunc(h.HandleTaskGetArticle())
+	mailHandler := http.HandlerFunc(h.HandleTaskSendEmail())
 	mux.Handle("/list", middleWare(listHandle))
 	mux.Handle("/one", middleWare(oneHandle))
 	mux.Handle("/email", middleWare(mailHandler))
+
+	//s.router.HandleFunc("/one", s.hhandleGreeting("hello %s"))
 
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)

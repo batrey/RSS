@@ -3,11 +3,21 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
-	"rss/app/db"
+	"rss/app/models"
 	"strings"
 )
 
-func GetList(db db.DataBase) http.HandlerFunc {
+type BaseHandler struct {
+	ArticleRep models.ArticlesRepo
+}
+
+func NewBaseHandler(articleRepo models.ArticlesRepo) *BaseHandler {
+	return &BaseHandler{
+		ArticleRep: articleRepo,
+	}
+}
+
+func (db *BaseHandler) HandleTaskGetList() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		category, okcategory := r.URL.Query()["category"]
 		cursor, ok := r.URL.Query()["cursor"]
@@ -32,7 +42,7 @@ func GetList(db db.DataBase) http.HandlerFunc {
 		categoryOk := strings.ToLower(tmp)
 		categoryOk = CategoryCheck(categoryOk)
 
-		resp, err := db.PagnationArticles(categoryOk, cursor[0], limit[0])
+		resp, err := db.ArticleRep.PagnationArticles(categoryOk, cursor[0], limit[0])
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -48,7 +58,7 @@ func GetList(db db.DataBase) http.HandlerFunc {
 	}
 }
 
-func GetArticle(db db.DataBase) http.HandlerFunc {
+func (db *BaseHandler) HandleTaskGetArticle() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		category, okcategory := r.URL.Query()["category"]
 		cursor, ok := r.URL.Query()["cursor"]
@@ -65,7 +75,7 @@ func GetArticle(db db.DataBase) http.HandlerFunc {
 		tmp := category[0]
 		categoryOk := strings.ToLower(tmp)
 		categoryOk = CategoryCheck(categoryOk)
-		resp, err := db.GetOneArticle(categoryOk, cursor[0])
+		resp, err := db.ArticleRep.GetOneArticle(categoryOk, cursor[0])
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -81,7 +91,7 @@ func GetArticle(db db.DataBase) http.HandlerFunc {
 	}
 }
 
-func ShareEmail(db db.DataBase) http.HandlerFunc {
+func (db *BaseHandler) HandleTaskSendEmail() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		category, okcategory := r.URL.Query()["category"]
 		cursor, okcursor := r.URL.Query()["cursor"]
@@ -121,7 +131,7 @@ func ShareEmail(db db.DataBase) http.HandlerFunc {
 		categoryOk := strings.ToLower(tmp)
 		categoryOk = CategoryCheck(categoryOk)
 
-		resp, err := db.GetOneArticle(categoryOk, cursor[0])
+		resp, err := db.ArticleRep.GetOneArticle(categoryOk, cursor[0])
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -131,3 +141,23 @@ func ShareEmail(db db.DataBase) http.HandlerFunc {
 		w.WriteHeader(http.StatusOK)
 	}
 }
+
+// func (s *models.Server) respnd(w http.ResponseWriter, r *http.Request, resp interface{}, status int) {
+// 	if data != nil {
+// 		err := json.NewEncoder(w).Encode(resp)
+// 		//TODO:
+// 	}
+
+// 	w.WriteHeader(status)
+// 	w.WriteHeader(http.StatusOK)
+// 	encoder := json.NewEncoder(w)
+// 	encoder.SetEscapeHTML(false)
+// 	if err := encoder.Encode(resp); err != nil {
+// 		w.WriteHeader(http.StatusInternalServerError)
+// 		w.Write([]byte(err.Error()))
+// 	}
+// }
+
+// func (s *Server) decode(w http.ResponseWriter, r *http.Request, v interface{}) error {
+// 	return json.NewDecoder(r.Body).Decode(v)
+// }
