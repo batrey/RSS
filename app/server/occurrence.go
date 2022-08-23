@@ -1,10 +1,13 @@
 package server
 
 import (
+	"encoding/xml"
+	"io/ioutil"
+	"net/http"
 	"os"
-	"rss/app/handlers"
 	"rss/app/models"
 	"strings"
+	"time"
 )
 
 type TaskBaseHandler struct {
@@ -24,7 +27,7 @@ func (t *TaskBaseHandler) TaskBbc() {
 
 	// Start a goroutine for each feed url
 	for _, u := range urls {
-		go handlers.GetRssFeedBbc(u, feedc)
+		go GetRssFeedBbc(u, feedc)
 	}
 
 	// Wait for the goroutines to write their results to the channel
@@ -48,7 +51,7 @@ func (t *TaskBaseHandler) TaskSky() {
 
 	// Start a goroutine for each feed url
 	for _, u := range urls {
-		go handlers.GetRssFeedSky(u, feedc)
+		go GetRssFeedSky(u, feedc)
 	}
 
 	// Wait for the goroutines to write their results to the channel
@@ -62,4 +65,76 @@ func (t *TaskBaseHandler) TaskSky() {
 	for _, feed := range feeds {
 		t.TaskBaseHandler.AddArticles(feed.Channel.Title, feed)
 	}
+}
+
+func GetRssFeedBbc(url string, feedc chan models.RssBbc) {
+	// Create a client with a default timeout
+	net := &http.Client{
+		Timeout: time.Second * 10,
+	}
+	//GET request for the feed
+	res, err := net.Get(url)
+	// If there was an error write that to the channel and return immediately
+	if err != nil {
+		feedc <- models.RssBbc{}
+		return
+	}
+	defer res.Body.Close()
+	// Read the body of the request and parse the feed
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		feedc <- models.RssBbc{}
+		return
+	}
+	feed, err := parseFeedBbc(body)
+	if err != nil {
+		feedc <- models.RssBbc{}
+		return
+	}
+	feedc <- *feed
+}
+
+func GetRssFeedSky(url string, feedc chan models.RssSky) {
+	// Create a client with a default timeout
+	net := &http.Client{
+		Timeout: time.Second * 10,
+	}
+	//GET request for the feed
+	res, err := net.Get(url)
+	// If there was an error write that to the channel and return immediately
+	if err != nil {
+		feedc <- models.RssSky{}
+		return
+	}
+	defer res.Body.Close()
+	// Read the body of the request and parse the feed
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		feedc <- models.RssSky{}
+		return
+	}
+	feed, err := parseFeedSky(body)
+	if err != nil {
+		feedc <- models.RssSky{}
+		return
+	}
+	feedc <- *feed
+}
+
+func parseFeedBbc(body []byte) (*models.RssBbc, error) {
+	feed := models.RssBbc{}
+	err := xml.Unmarshal(body, &feed)
+	if err != nil {
+		return nil, err
+	}
+	return &feed, nil
+}
+
+func parseFeedSky(body []byte) (*models.RssSky, error) {
+	feed := models.RssSky{}
+	err := xml.Unmarshal(body, &feed)
+	if err != nil {
+		return nil, err
+	}
+	return &feed, nil
 }

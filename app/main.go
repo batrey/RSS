@@ -14,7 +14,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/go-redis/redis"
 	"github.com/joho/godotenv"
 	_ "github.com/joho/godotenv/autoload"
 	_ "github.com/lib/pq"
@@ -31,7 +30,7 @@ func middleWare(next http.Handler) http.Handler {
 		contentType := r.Header.Get("Content-Type")
 		if contentType != "application/json" {
 			w.WriteHeader(http.StatusUnsupportedMediaType)
-
+			//Add some auth here
 		}
 
 		next.ServeHTTP(w, r)
@@ -45,30 +44,22 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error loading .env file")
 	}
-	//Connect to redis
-	client := redis.NewClient(&redis.Options{
-		Addr:     os.Getenv("REDIS_ADDRESS"),
-		Password: os.Getenv("REDIS_PASSWORD"),
-		DB:       0,
-	})
-	pong, err := client.Ping().Result()
-	fmt.Println(pong, err)
 
 	db := database.ConnectDb()
 	articlesRepo := database.NewArticleRepo(db)
 	h := handlers.NewBaseHandler(articlesRepo)
 	t := server.TaskNewBaseHandle(articlesRepo)
 
-	//Connect to postgres
-
 	//close db connection
 	defer articlesRepo.Close()
+	fmt.Println("PostgreSQL connected successfully...")
 
+	//Create a go routine that  pulls data every x amount
 	envTime := os.Getenv("PULL_TIME")
 	pullTime, err := time.ParseDuration(envTime)
-	fmt.Println("PostgreSQL and Redis connected successfully...")
 	ticker := time.NewTicker(pullTime * time.Second)
 	quit := make(chan struct{})
+
 	go func() {
 		for {
 			select {
@@ -107,8 +98,7 @@ func main() {
 	mux.Handle("/one", middleWare(oneHandle))
 	mux.Handle("/email", middleWare(mailHandler))
 
-	//s.router.HandleFunc("/one", s.hhandleGreeting("hello %s"))
-
+	//Gracefully shutdown server when interrupt is given
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
@@ -116,7 +106,6 @@ func main() {
 			log.Fatalf("listen: %s\n", err)
 		}
 	}()
-	log.Println("Server started on port 8080")
 	<-done
 	log.Println("Server Stopped on port 8080")
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)

@@ -49,6 +49,7 @@ func (db *ArticleRepo) AddArticles(category string, article interface{}) (err er
 	}
 	_, err = db.Conn.Exec("INSERT INTO articles (category,article) VALUES ($1,$2)", category, tmp)
 	if err != nil {
+		fmt.Println(err)
 		return err
 	}
 
@@ -84,6 +85,7 @@ func (db *ArticleRepo) GetOneArticle(category string, id string) (article interf
 	var tmp []byte
 	err = db.Conn.QueryRow("SELECT article FROM articles WHERE category = $1 and id = $2", category, id).Scan(&tmp)
 	if err != nil {
+		fmt.Println(err)
 		return nil, err
 	}
 
