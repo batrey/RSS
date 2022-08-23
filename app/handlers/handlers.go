@@ -2,9 +2,12 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"rss/app/models"
+	server "rss/app/server"
 	"strings"
+	"time"
 )
 
 type BaseHandler struct {
@@ -149,4 +152,36 @@ func (db *BaseHandler) HandleTaskSendEmail() http.HandlerFunc {
 		}
 		w.WriteHeader(http.StatusOK)
 	}
+}
+
+func (db *BaseHandler) HandlerPullArticles(pullTime time.Duration) {
+	t := server.TaskNewBaseHandle(db.ArticleRep)
+	ticker := time.NewTicker(pullTime * time.Second)
+	quit := make(chan struct{})
+
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				fmt.Println("Getting sky Articles")
+				t.TaskSky()
+			case <-quit:
+				ticker.Stop()
+				return
+			}
+		}
+	}()
+
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				fmt.Println("Getting BBC Articles ")
+				t.TaskBbc()
+			case <-quit:
+				ticker.Stop()
+				return
+			}
+		}
+	}()
 }

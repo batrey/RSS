@@ -10,7 +10,7 @@ import (
 	"os/signal"
 	database "rss/app/db"
 	"rss/app/handlers"
-	"rss/app/server"
+
 	"syscall"
 	"time"
 
@@ -48,7 +48,6 @@ func main() {
 	db := database.ConnectDb()
 	articlesRepo := database.NewArticleRepo(db)
 	h := handlers.NewBaseHandler(articlesRepo)
-	t := server.TaskNewBaseHandle(articlesRepo)
 
 	//close db connection
 	defer articlesRepo.Close()
@@ -57,33 +56,7 @@ func main() {
 	//Create a go routine that  pulls data every x amount
 	envTime := os.Getenv("PULL_TIME")
 	pullTime, err := time.ParseDuration(envTime)
-	ticker := time.NewTicker(pullTime * time.Second)
-	quit := make(chan struct{})
-
-	go func() {
-		for {
-			select {
-			case <-ticker.C:
-				fmt.Println("Getting sky Articles")
-				t.TaskSky()
-			case <-quit:
-				ticker.Stop()
-				return
-			}
-		}
-	}()
-	go func() {
-		for {
-			select {
-			case <-ticker.C:
-				fmt.Println("Getting BBC Articles ")
-				t.TaskBbc()
-			case <-quit:
-				ticker.Stop()
-				return
-			}
-		}
-	}()
+	h.HandlerPullArticles(pullTime)
 
 	mux := http.NewServeMux()
 	srv := &http.Server{
