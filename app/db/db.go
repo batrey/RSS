@@ -24,6 +24,7 @@ func (db *ArticleRepo) Close() error {
 	return db.Conn.Close()
 }
 
+// Connects to the DB
 func ConnectDb() *sql.DB {
 	var err error
 	url := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", os.Getenv("POSTGRES_USER"), os.Getenv("POSTGRES_PASSWORD"), os.Getenv("POSTGRES_HOST"), os.Getenv("POSTGRES_PORT"), os.Getenv("POSTGRES_DB"))
@@ -42,6 +43,7 @@ func ConnectDb() *sql.DB {
 	return Conn
 }
 
+// Adds Article to the DB.
 func (db *ArticleRepo) AddArticles(category string, article interface{}) (err error) {
 	tmp, err := json.Marshal(article)
 	if err != nil {
@@ -57,6 +59,7 @@ func (db *ArticleRepo) AddArticles(category string, article interface{}) (err er
 
 }
 
+// Gets Multiple Articles with Cursor (id in the DB) and limit positive int
 func (db *ArticleRepo) PagnationArticles(category string, cursor string, limit string) (map[string]interface{}, error) {
 	articles := make(map[string]interface{})
 	rows, err := db.Conn.Query("SELECT id,article FROM articles WHERE category = $1 and id > $2 ORDER BY id ASC LIMIT $3", category, cursor, limit)

@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+// Sends Email
 func Email(Emailreceiver []string, emailSender string, content []byte) error {
 	host := os.Getenv("MAIL_HOST")
 	port := os.Getenv("MAIL_PORT")

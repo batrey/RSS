@@ -17,6 +17,7 @@ func NewBaseHandler(articleRepo models.ArticlesRepo) *BaseHandler {
 	}
 }
 
+// Returns multi Articles
 func (db *BaseHandler) HandleTaskGetList() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		category, okCategory := r.URL.Query()["category"]
@@ -61,6 +62,7 @@ func (db *BaseHandler) HandleTaskGetList() http.HandlerFunc {
 	}
 }
 
+// Returns One Article
 func (db *BaseHandler) HandleTaskGetArticle() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		category, okCategory := r.URL.Query()["category"]
@@ -96,6 +98,7 @@ func (db *BaseHandler) HandleTaskGetArticle() http.HandlerFunc {
 	}
 }
 
+// Sends email
 func (db *BaseHandler) HandleTaskSendEmail() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		category, okCategory := r.URL.Query()["category"]

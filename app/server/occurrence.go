@@ -19,6 +19,8 @@ func TaskNewBaseHandle(task models.ArticlesRepo) *TaskBaseHandler {
 		TaskBaseHandler: task,
 	}
 }
+
+// Gets BBC articles
 func (t *TaskBaseHandler) TaskBbc() {
 
 	urls := strings.Split(os.Getenv("BBC_URLS"), ",")
@@ -43,6 +45,7 @@ func (t *TaskBaseHandler) TaskBbc() {
 	}
 }
 
+// Gets Sky Articles
 func (t *TaskBaseHandler) TaskSky() {
 
 	urls := strings.Split(os.Getenv("SKY_URLS"), ",")
@@ -67,6 +70,7 @@ func (t *TaskBaseHandler) TaskSky() {
 	}
 }
 
+// Gets Articles from BBC
 func GetRssFeedBbc(url string, feedc chan models.RssBbc) {
 	// Create a client with a default timeout
 	net := &http.Client{
@@ -94,6 +98,7 @@ func GetRssFeedBbc(url string, feedc chan models.RssBbc) {
 	feedc <- *feed
 }
 
+// Gets Articles from sky
 func GetRssFeedSky(url string, feedc chan models.RssSky) {
 	// Create a client with a default timeout
 	net := &http.Client{
@@ -121,6 +126,7 @@ func GetRssFeedSky(url string, feedc chan models.RssSky) {
 	feedc <- *feed
 }
 
+// Parses the BBC feeds
 func parseFeedBbc(body []byte) (*models.RssBbc, error) {
 	feed := models.RssBbc{}
 	err := xml.Unmarshal(body, &feed)
@@ -130,6 +136,7 @@ func parseFeedBbc(body []byte) (*models.RssBbc, error) {
 	return &feed, nil
 }
 
+// Parses the Sky feed
 func parseFeedSky(body []byte) (*models.RssSky, error) {
 	feed := models.RssSky{}
 	err := xml.Unmarshal(body, &feed)
