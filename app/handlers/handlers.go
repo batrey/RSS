@@ -3,9 +3,10 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"rss/app/models"
-	server "rss/app/server"
+	"rss/app/server"
 	"strings"
 	"time"
 )
@@ -30,18 +31,21 @@ func (db *BaseHandler) HandleTaskGetList() http.HandlerFunc {
 		if !okCategory || category[0] == "" {
 			w.WriteHeader(http.StatusBadRequest)
 			http.Error(w, "Something went wrong with the Category", http.StatusBadRequest)
+			log.Println("Error with Category in  HandleTaskGetList err ")
 			return
 		}
 
 		if !ok || len(cursor[0]) < 1 || !isNumeric(cursor[0]) {
 			w.WriteHeader(http.StatusBadRequest)
 			http.Error(w, "No Cursor provided", http.StatusBadRequest)
+			log.Println("Error with Cursor in  HandleTaskGetList err ")
 			return
 		}
 
 		if !okLimit || len(limit[0]) < 1 || !isNumeric(limit[0]) {
 			w.WriteHeader(http.StatusBadRequest)
 			http.Error(w, "Something went wrong with the  limit", http.StatusBadRequest)
+			log.Println("Error with LIMIT in  HandleTaskGetList err ")
 			return
 		}
 
@@ -49,8 +53,9 @@ func (db *BaseHandler) HandleTaskGetList() http.HandlerFunc {
 		categoryOk := strings.ToLower(tmp)
 		categoryOk = CategoryCheck(categoryOk)
 
-		resp, err := db.ArticleRep.PagnationArticles(categoryOk, cursor[0], limit[0])
+		resp, err := db.ArticleRep.PaginationArticles(categoryOk, cursor[0], limit[0])
 		if err != nil {
+			log.Printf("Error Reading Articles in HandleTaskGetList func PaginationArticles err %s", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -58,6 +63,7 @@ func (db *BaseHandler) HandleTaskGetList() http.HandlerFunc {
 		encoder := json.NewEncoder(w)
 		encoder.SetEscapeHTML(false)
 		if err := encoder.Encode(resp); err != nil {
+			log.Printf("Error Encoding Response in func HandleTaskGetList err %s", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
 		}
@@ -72,11 +78,13 @@ func (db *BaseHandler) HandleTaskGetArticle() http.HandlerFunc {
 		cursor, ok := r.URL.Query()["cursor"]
 
 		if !okCategory || category[0] == "" {
+			log.Println("Error  with in category func HandleTaskGetArticle err")
 			w.WriteHeader(http.StatusBadRequest)
 			http.Error(w, "Something went wrong with the category", http.StatusBadRequest)
 			return
 		}
 		if !ok || len(cursor[0]) < 1 || !isNumeric(cursor[0]) {
+			log.Println("Error  with in cursor func HandleTaskGetArticle err")
 			w.WriteHeader(http.StatusBadRequest)
 			http.Error(w, "Something went wrong with the Cursor", http.StatusBadRequest)
 			return
@@ -87,6 +95,7 @@ func (db *BaseHandler) HandleTaskGetArticle() http.HandlerFunc {
 		categoryOk = CategoryCheck(categoryOk)
 		resp, err := db.ArticleRep.GetOneArticle(categoryOk, cursor[0])
 		if err != nil {
+			log.Printf("Error  with in  func HandleTaskGetArticle  with GetOneArticle err %s", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -95,6 +104,7 @@ func (db *BaseHandler) HandleTaskGetArticle() http.HandlerFunc {
 		encoder := json.NewEncoder(w)
 		encoder.SetEscapeHTML(false)
 		if err := encoder.Encode(resp); err != nil {
+			log.Printf("Error  with in Encode func HandleTaskGetArticle err %s", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
 		}
@@ -111,22 +121,26 @@ func (db *BaseHandler) HandleTaskSendEmail() http.HandlerFunc {
 
 		if !okCategory || category[0] == "" {
 			w.WriteHeader(http.StatusBadRequest)
+			log.Println("Error  with in category func HandleTaskSendEmail")
 			http.Error(w, "Something went wrong with the Category", http.StatusBadRequest)
 			return
 		}
 		if !okReceiver || receiver[0] == "" {
 			w.WriteHeader(http.StatusBadRequest)
+			log.Println("Error  with in receiver func HandleTaskSendEmail")
 			http.Error(w, "Something went wrong with the Receiver", http.StatusBadRequest)
 			return
 		}
 		if !okSender || sender[0] == "" {
 			w.WriteHeader(http.StatusBadRequest)
+			log.Println("Error  with in sender func HandleTaskSendEmail")
 			http.Error(w, "Something went wrong with the Sender ", http.StatusBadRequest)
 			return
 		}
 
 		if !okCursor || len(cursor[0]) < 1 || !isNumeric(cursor[0]) {
 			w.WriteHeader(http.StatusBadRequest)
+			log.Println("Error  with in cursor func HandleTaskSendEmail")
 			http.Error(w, "Something went wrong with the Cursor", http.StatusBadRequest)
 			return
 		}
@@ -137,16 +151,19 @@ func (db *BaseHandler) HandleTaskSendEmail() http.HandlerFunc {
 
 		resp, err := db.ArticleRep.GetOneArticle(categoryOk, cursor[0])
 		if err != nil {
+			log.Printf("Error  with  GetOneArticle func HandleTaskSendEmail err: %s", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 		tmpResp, err := json.Marshal(resp)
 		if err != nil {
+			log.Printf("Error  with  Marshal func HandleTaskSendEmail err: %s", err)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 		err = Email(receiver, sender[0], tmpResp)
 		if err != nil {
+			log.Printf("Error  with  Sending Email func HandleTaskSendEmail err: %s", err)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}

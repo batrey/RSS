@@ -42,7 +42,7 @@ func main() {
 	//Load env file
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatalf("Error loading .env file")
+		log.Printf("Error loading .env file")
 	}
 
 	db := database.ConnectDb()
@@ -76,7 +76,7 @@ func main() {
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
 		if err = srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("listen: %s\n", err)
+			log.Printf("listen: %s\n", err)
 		}
 	}()
 	<-done
@@ -88,7 +88,7 @@ func main() {
 	}()
 
 	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatalf("Server Shutdown Failed:%+v", err)
+		log.Printf("Server Shutdown Failed:%+v", err)
 	}
 	log.Print("Server Exited Properly")
 

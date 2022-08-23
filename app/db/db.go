@@ -30,12 +30,13 @@ func ConnectDb() *sql.DB {
 	url := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", os.Getenv("POSTGRES_USER"), os.Getenv("POSTGRES_PASSWORD"), os.Getenv("POSTGRES_HOST"), os.Getenv("POSTGRES_PORT"), os.Getenv("POSTGRES_DB"))
 	Conn, err := sql.Open("postgres", url)
 	if err != nil {
-		log.Fatalf("could not connect to postgres database: %v", err)
+		log.Printf("could not connect to postgres database: %v", err)
 		return Conn
 	}
 
 	err = Conn.Ping()
 	if err != nil {
+		log.Printf("Error Pinging  DB err %s", err)
 		return Conn
 	}
 
@@ -51,7 +52,7 @@ func (db *ArticleRepo) AddArticles(category string, article interface{}) (err er
 	}
 	_, err = db.Conn.Exec("INSERT INTO articles (category,article) VALUES ($1,$2)", category, tmp)
 	if err != nil {
-		fmt.Println(err)
+		log.Printf("Error Inserting Articles err %s", err)
 		return err
 	}
 
@@ -60,10 +61,11 @@ func (db *ArticleRepo) AddArticles(category string, article interface{}) (err er
 }
 
 // Gets Multiple Articles with Cursor (id in the DB) and limit positive int
-func (db *ArticleRepo) PagnationArticles(category string, cursor string, limit string) (map[string]interface{}, error) {
+func (db *ArticleRepo) PaginationArticles(category string, cursor string, limit string) (map[string]interface{}, error) {
 	articles := make(map[string]interface{})
 	rows, err := db.Conn.Query("SELECT id,article FROM articles WHERE category = $1 and id > $2 ORDER BY id ASC LIMIT $3", category, cursor, limit)
 	if err != nil {
+		log.Printf("Error Reading Querying in Pagination Articles err %s", err)
 		return nil, err
 	}
 
@@ -75,6 +77,7 @@ func (db *ArticleRepo) PagnationArticles(category string, cursor string, limit s
 
 		err := rows.Scan(&id, &article)
 		if err != nil {
+			log.Printf("Error Reading response  in Pagination Articles err %s", err)
 			return articles, err
 		}
 
@@ -88,7 +91,7 @@ func (db *ArticleRepo) GetOneArticle(category string, id string) (article interf
 	var tmp []byte
 	err = db.Conn.QueryRow("SELECT article FROM articles WHERE category = $1 and id = $2", category, id).Scan(&tmp)
 	if err != nil {
-		fmt.Println(err)
+		log.Printf("Error Getting one Article err %s", err)
 		return nil, err
 	}
 
@@ -99,7 +102,7 @@ func issue(value []byte) interface{} {
 	var obj interface{}
 	err := json.Unmarshal(value, &obj)
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Error Unmarshalling  one Article err %s", err)
 	}
 	return obj
 }
