@@ -19,22 +19,25 @@ func NewBaseHandler(articleRepo models.ArticlesRepo) *BaseHandler {
 
 func (db *BaseHandler) HandleTaskGetList() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		category, okcategory := r.URL.Query()["category"]
+		category, okCategory := r.URL.Query()["category"]
 		cursor, ok := r.URL.Query()["cursor"]
 		limit, okLimit := r.URL.Query()["limit"]
 
-		if !okcategory || category[0] == "" {
+		if !okCategory || category[0] == "" {
 			w.WriteHeader(http.StatusBadRequest)
+			http.Error(w, "Something went wrong with the Category", http.StatusBadRequest)
 			return
 		}
 
 		if !ok || len(cursor[0]) < 1 || !isNumeric(cursor[0]) {
 			w.WriteHeader(http.StatusBadRequest)
+			http.Error(w, "No Cursor provided", http.StatusBadRequest)
 			return
 		}
 
 		if !okLimit || len(limit[0]) < 1 || !isNumeric(limit[0]) {
 			w.WriteHeader(http.StatusBadRequest)
+			http.Error(w, "Something went wrong with the  limit", http.StatusBadRequest)
 			return
 		}
 
@@ -60,15 +63,17 @@ func (db *BaseHandler) HandleTaskGetList() http.HandlerFunc {
 
 func (db *BaseHandler) HandleTaskGetArticle() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		category, okcategory := r.URL.Query()["category"]
+		category, okCategory := r.URL.Query()["category"]
 		cursor, ok := r.URL.Query()["cursor"]
 
-		if !okcategory || category[0] == "" {
+		if !okCategory || category[0] == "" {
 			w.WriteHeader(http.StatusBadRequest)
+			http.Error(w, "Something went wrong with the category", http.StatusBadRequest)
 			return
 		}
 		if !ok || len(cursor[0]) < 1 || !isNumeric(cursor[0]) {
 			w.WriteHeader(http.StatusBadRequest)
+			http.Error(w, "Something went wrong with the Cursor", http.StatusBadRequest)
 			return
 		}
 
@@ -93,37 +98,30 @@ func (db *BaseHandler) HandleTaskGetArticle() http.HandlerFunc {
 
 func (db *BaseHandler) HandleTaskSendEmail() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		category, okcategory := r.URL.Query()["category"]
-		cursor, okcursor := r.URL.Query()["cursor"]
-		limit, okLimit := r.URL.Query()["limit"]
-		addr, okaddr := r.URL.Query()["addr"]
-		sender, oksender := r.URL.Query()["sender"]
-		reciver, okreciver := r.URL.Query()["cursor"]
+		category, okCategory := r.URL.Query()["category"]
+		cursor, okCursor := r.URL.Query()["cursor"]
+		sender, okSender := r.URL.Query()["sender"]
+		receiver, okReceiver := r.URL.Query()["To"]
 
-		if !okcategory || category[0] == "" {
+		if !okCategory || category[0] == "" {
 			w.WriteHeader(http.StatusBadRequest)
+			http.Error(w, "Something went wrong with the Category", http.StatusBadRequest)
 			return
 		}
-		if !okreciver || reciver[0] == "" {
+		if !okReceiver || receiver[0] == "" {
 			w.WriteHeader(http.StatusBadRequest)
+			http.Error(w, "Something went wrong with the Receiver", http.StatusBadRequest)
 			return
 		}
-		if !oksender || sender[0] == "" {
+		if !okSender || sender[0] == "" {
 			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-		if !okaddr || addr[0] == "" {
-			w.WriteHeader(http.StatusBadRequest)
+			http.Error(w, "Something went wrong with the Sender ", http.StatusBadRequest)
 			return
 		}
 
-		if !okcursor || len(cursor[0]) < 1 || !isNumeric(cursor[0]) {
+		if !okCursor || len(cursor[0]) < 1 || !isNumeric(cursor[0]) {
 			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-		if !okLimit || len(limit[0]) < 1 || !isNumeric(limit[0]) {
-			w.WriteHeader(http.StatusBadRequest)
+			http.Error(w, "Something went wrong with the Cursor", http.StatusBadRequest)
 			return
 		}
 
@@ -141,7 +139,7 @@ func (db *BaseHandler) HandleTaskSendEmail() http.HandlerFunc {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		err = Email(addr[0], reciver, sender[0], tmpResp)
+		err = Email(receiver, sender[0], tmpResp)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return

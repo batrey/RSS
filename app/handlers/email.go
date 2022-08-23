@@ -7,10 +7,10 @@ import (
 	"time"
 )
 
-func Email(addr string, Emailreceiver []string, emailSender string, content []byte) error {
+func Email(Emailreceiver []string, emailSender string, content []byte) error {
 	host := os.Getenv("MAIL_HOST")
 	port := os.Getenv("MAIL_PORT")
-	addr = host + ":" + port
+	addr := host + ":" + port
 
 	to := strings.Join(Emailreceiver, ",")
 	pw := os.Getenv("MAIL_PASSWORD")
